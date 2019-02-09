@@ -98,4 +98,27 @@ class QueryTest {
         assertEquals(expected, actual)
     }
 
+    @Test
+    fun selectAgeInList10_20_30() {
+        val expected = "SELECT * FROM users WHERE age IN(10, 20, 30)"
+        val actual = select {
+            where {
+                it.age.inList(listOf(10, 20, 30))
+            }
+        }
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun selectAgeNotInList10_20_30() {
+        val expected = "SELECT * FROM users WHERE age NOT IN(10, 20, 30)"
+        val actual = select {
+            where {
+                it.age.notInList(listOf(10, 20, 30))
+            }
+        }
+        assertEquals(expected, actual)
+    }
+
+
 }
