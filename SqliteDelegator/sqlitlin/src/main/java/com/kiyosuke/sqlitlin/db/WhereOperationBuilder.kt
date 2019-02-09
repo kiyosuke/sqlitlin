@@ -2,41 +2,89 @@ package com.kiyosuke.sqlitlin.db
 
 import com.kiyosuke.sqlitlin.db.column.Column
 
-class WhereOperationBuilder {
+object WhereOperationBuilder {
 
-    private val whereOperations: MutableList<WhereOp> = mutableListOf()
+    infix fun <T> Column<T>.eq(data: T): WhereOp =
+        if (this is Column.Text) Eq<String>(this, "'$data'") else Eq(this, data)
+    
+    infix fun <T> Column<T>.less(data: T): WhereOp = Less(this, data)
 
-    infix fun <T> Column<T>.eq(data: T): WhereOp {
-        val op = if (this is Column.Text) WhereOp("${this.name} = '$data'") else WhereOp("${this.name} = $data")
-        whereOperations.add(op)
-        return op
+    infix fun <T> Column<T>.lessEq(data: T): WhereOp = LessEq(this, data)
+
+    infix fun <T> Column<T>.greater(data: T): WhereOp = Greater(this, data)
+
+    infix fun <T> Column<T>.greaterEq(data: T): WhereOp = GreaterEq(this, data)
+
+    infix fun Column.Text.like(text: String): WhereOp = Like(this, text)
+
+    infix fun <T> Column<T>.between(between: Pair<T, T>): WhereOp = Between(this, between)
+
+    infix fun WhereOp.or(operation: WhereOp): WhereOp = Or(this, operation)
+
+    infix fun WhereOp.and(operation: WhereOp): WhereOp = And(this, operation)
+
+}
+
+class Eq<T>(private val column: Column<T>, private val data: T) : WhereOp() {
+    override fun toSql(): String = buildString {
+        append("${column.name} = $data")
     }
+}
 
-    infix fun Column.Text.like(text: String): WhereOp {
-        val op = WhereOp("${this.name} LIKE '$text'")
-        whereOperations.add(op)
-        return op
+class Neq<T>(private val column: Column<T>, private val data: T) : WhereOp() {
+    override fun toSql(): String = buildString {
+        append("${column.name} != $data")
     }
+}
 
-    infix fun <T> Column<T>.between(between: Pair<T, T>): WhereOp {
-        val op = WhereOp("${this.name} BETWEEN ${between.first} AND ${between.second}")
-        whereOperations.add(op)
-        return op
+class Less<T>(private val column: Column<T>, private val data: T) : WhereOp() {
+    override fun toSql(): String = buildString {
+        append("${column.name} < $data")
     }
+}
 
-    infix fun WhereOp.or(operation: WhereOp): WhereOp {
-        val op = WhereOp("OR ${operation.operation}")
-        whereOperations.add(op)
-        return op
+class LessEq<T>(private val column: Column<T>, private val data: T) : WhereOp() {
+    override fun toSql(): String = buildString {
+        append("${column.name} <= $data")
     }
+}
 
-    infix fun WhereOp.and(operation: WhereOp): WhereOp {
-        val op = WhereOp("AND ${operation.operation}")
-        whereOperations.add(op)
-        return op
+class Greater<T>(private val column: Column<T>, private val data: T) : WhereOp() {
+    override fun toSql(): String = buildString {
+        append("${column.name} > $data")
     }
+}
 
-    fun build(): WhereOp {
-        return WhereOp(whereOperations.map(WhereOp::operation).joinToString(" "))
+class GreaterEq<T>(private val column: Column<T>, private val data: T) : WhereOp() {
+    override fun toSql(): String = buildString {
+        append("${column.name} >= $data")
+    }
+}
+
+class Like(private val column: Column.Text, private val data: String) : WhereOp() {
+    override fun toSql(): String = buildString {
+        append("${column.name} LIKE '$data'")
+    }
+}
+
+class Between<T>(private val column: Column<T>, private val data: Pair<T, T>) : WhereOp() {
+    override fun toSql(): String = buildString {
+        append("${column.name} BETWEEN ${data.first} AND ${data.second}")
+    }
+}
+
+class Or(private val op1: WhereOp, private val op2: WhereOp) : WhereOp() {
+    override fun toSql(): String = buildString {
+        append(op1.toSql())
+        append(" OR ")
+        append(op2.toSql())
+    }
+}
+
+class And(private val op1: WhereOp, private val op2: WhereOp) : WhereOp() {
+    override fun toSql(): String = buildString {
+        append(op1.toSql())
+        append(" AND ")
+        append(op2.toSql())
     }
 }

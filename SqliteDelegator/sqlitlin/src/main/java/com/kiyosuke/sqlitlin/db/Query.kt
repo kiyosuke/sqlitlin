@@ -4,21 +4,16 @@ import com.kiyosuke.sqlitlin.db.column.Column
 import com.kiyosuke.sqlitlin.db.table.Table
 
 
-class Select<T : Table>(val from: T) {
+class Select<T : Table>(private val from: T) {
 
-    var where: Where? = null
-        private set
+    private var where: Where? = null
 
-    var orderBy: OrderBy? = null
-        private set
+    private var orderBy: OrderBy? = null
 
-    var limit: Limit? = null
-        private set
+    private var limit: Limit? = null
 
-    infix fun where(whereOperation: WhereOperationBuilder.(T) -> Unit) {
-        val where = Where(WhereOperationBuilder().apply {
-            whereOperation(from)
-        }.build())
+    infix fun where(whereOperation: WhereOperationBuilder.(T) -> WhereOp) {
+        val where = Where(whereOperation(WhereOperationBuilder, from))
         this@Select.where = where
     }
 
@@ -33,13 +28,13 @@ class Select<T : Table>(val from: T) {
     fun toSql(): String = buildString {
         append("SELECT * FROM ${from.tableName}")
         where?.let {
-            append(" WHERE ${it.whereOp.operation}")
+            append(" WHERE ${it.whereOp.toSql()}")
         }
         orderBy?.let {
             append(" ORDER BY ${it.column.name} ${it.sortOrder.name}")
         }
         limit?.let {
-            append(" LIMIT ${it.limit}")
+            append(" LIMIT ${it.limit} OFFSET ${it.offset}")
         }
     }
 
@@ -54,5 +49,5 @@ data class OrderBy(val column: Column<*>, val sortOrder: SortOrder) {
     }
 }
 
-data class Limit(val limit: Int)
+data class Limit(val limit: Int, val offset: Int = 0)
 
