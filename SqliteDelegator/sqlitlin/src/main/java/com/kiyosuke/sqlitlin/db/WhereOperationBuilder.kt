@@ -6,7 +6,10 @@ object WhereOperationBuilder {
 
     infix fun <T> Column<T>.eq(data: T): WhereOp =
         if (this is Column.Text) Eq<String>(this, "'$data'") else Eq(this, data)
-    
+
+    infix fun <T> Column<T>.neq(data: T): WhereOp =
+        if (this is Column.Text) Neq<String>(this, "'$data'") else Neq(this, data)
+
     infix fun <T> Column<T>.less(data: T): WhereOp = Less(this, data)
 
     infix fun <T> Column<T>.lessEq(data: T): WhereOp = LessEq(this, data)
