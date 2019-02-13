@@ -18,7 +18,7 @@ class Select<T : Table>(private val columns: List<Column<*>>, private val from: 
 
     private var limit: Limit? = null
 
-    infix fun where(whereOperation: WhereOperationBuilder.(T) -> WhereOp) {
+    infix fun where(whereOperation: WhereOperationBuilder.(T) -> Op) {
         val where = Where(whereOperation(WhereOperationBuilder, from))
         this@Select.where = where
     }
@@ -52,7 +52,7 @@ class Select<T : Table>(private val columns: List<Column<*>>, private val from: 
 
 val Column<*>.cursorKey: String get() = this.tableName + "_" + this.name
 
-data class Where(val whereOp: WhereOp)
+data class Where(val whereOp: Op)
 
 data class OrderBy(val column: Column<*>, val sortOrder: SortOrder) {
     enum class SortOrder {

@@ -1,6 +1,6 @@
 package com.kiyosuke.sqlitlin.db
 
 
-abstract class WhereOp {
+abstract class Op {
     abstract fun toSql(): String
 }
