@@ -22,6 +22,10 @@ object WhereOperationBuilder {
 
     infix fun <T> Column<T>.between(between: Pair<T, T>): WhereOp = Between(this, between)
 
+    infix fun <T> Column<T>.inList(list: List<T>): WhereOp = InList(this, list)
+
+    infix fun <T> Column<T>.notInList(list: List<T>): WhereOp = NotInList(this, list)
+
     infix fun WhereOp.or(operation: WhereOp): WhereOp = Or(this, operation)
 
     infix fun WhereOp.and(operation: WhereOp): WhereOp = And(this, operation)
@@ -73,6 +77,28 @@ class Like(private val column: Column.Text, private val data: String) : WhereOp(
 class Between<T>(private val column: Column<T>, private val data: Pair<T, T>) : WhereOp() {
     override fun toSql(): String = buildString {
         append("${column.tableName}.${column.name} BETWEEN ${data.first} AND ${data.second}")
+    }
+}
+
+class InList<T>(private val column: Column<T>, private val list: List<T>) : WhereOp() {
+    override fun toSql(): String {
+        if (list.isEmpty()) throw IllegalArgumentException("list is empty")
+        return buildString {
+            append("${column.name} IN(")
+            append(list.joinToString(", "))
+            append(")")
+        }
+    }
+}
+
+class NotInList<T>(private val column: Column<T>, private val list: List<T>) : WhereOp() {
+    override fun toSql(): String {
+        if (list.isEmpty()) throw IllegalArgumentException("list is empty")
+        return buildString {
+            append("${column.name} NOT IN(")
+            append(list.joinToString(", "))
+            append(")")
+        }
     }
 }
 
