@@ -79,7 +79,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     private fun insertUser() = launch {
         val kiyosuke = ColumnMap().apply {
             this[Users.name] = "kiyosuke"
-            tihs[Users.age] = 20
+            this[Users.age] = 20
         }
         usersDao.insert(kiyosuke)
     }
