@@ -60,27 +60,48 @@ abstract class Dao<T : Table>(private val database: SupportDatabase) {
         }
     }
 
+    private val deletionSqliteSequenceAdapter by lazy {
+        object : SharedSQLiteStatement(database) {
+            override fun createQuery(): String = "DELETE FROM sqlite_sequence WHERE name = '${table.tableName}'"
+        }
+    }
+
     private val allDeletionAdapter by lazy {
         object : SharedSQLiteStatement(database) {
             override fun createQuery(): String = "DELETE FROM ${table.tableName}"
         }
     }
 
-    suspend fun select(query: Select<T>.() -> Unit): List<ColumnMap> =
+    suspend fun select(vararg columns: Column<*> = emptyArray(), query: Select<T>.() -> Unit): List<ColumnMap> =
         withContext(Dispatchers.IO) {
-            val sql = Select(table).apply(query).toSql()
+            val sql = Select(if (columns.isEmpty()) table.columns else listOf(*columns), table).apply(query).toSql()
             val result = database.query(sql).toResultMaps(table)
             if (result.isEmpty()) throw EmptyResultSetException("Query returned empty result set: $sql")
             return@withContext result
         }
 
+    suspend fun Join.select(
+        vararg columns: Column<*> = emptyArray(),
+        query: Select<T>.() -> Unit
+    ): List<ColumnMap> = withContext(Dispatchers.IO) {
+        if (columns.isEmpty()) throw IllegalArgumentException("columns is empty.")
+        val sql = Select(listOf(*columns), table, this@select).apply(query).toSql()
+        val result = database.query(sql).toResultMaps(listOf(*columns))
+        if (result.isEmpty()) throw EmptyResultSetException("Query returned empty result set: $sql")
+        return@withContext result
+    }
+
     suspend fun selectAll(): List<ColumnMap> =
         withContext(Dispatchers.IO) {
-            val sql = "SELECT * FROM ${table.tableName}"
+            val sql = Select(table.columns, table).toSql()
             val result = database.query(sql).toResultMaps(table)
             if (result.isEmpty()) throw EmptyResultSetException("Query returned empty result set: $sql")
             return@withContext result
         }
+
+    fun <JT : Table> innerJoin(joinTable: JT, onColumn: Column<*>, joinColumn: Column<*>): InnerJoin {
+        return InnerJoin(joinTable, onColumn, joinColumn)
+    }
 
     suspend fun insert(item: ColumnMap) = withContext(Dispatchers.IO) {
         database.runInTransaction {
@@ -123,17 +144,36 @@ abstract class Dao<T : Table>(private val database: SupportDatabase) {
         }
     }
 
+    suspend fun truncate() = withContext(Dispatchers.IO) {
+        val stmt = allDeletionAdapter.acquire()
+        val sqliteSequenceStmt = deletionSqliteSequenceAdapter.acquire()
+        database.beginTransaction()
+        try {
+            stmt.executeUpdateDelete()
+            sqliteSequenceStmt.executeUpdateDelete()
+            database.setTransactionSuccessful()
+        } finally {
+            database.endTransaction()
+            allDeletionAdapter.release(stmt)
+            deletionSqliteSequenceAdapter.release(sqliteSequenceStmt)
+        }
+    }
+
     private fun Cursor.toResultMaps(table: Table): List<ColumnMap> {
+        return toResultMaps(table.columns)
+    }
+
+    private fun Cursor.toResultMaps(columns: List<Column<*>>): List<ColumnMap> {
         val result: MutableList<ColumnMap> = mutableListOf()
         val indexCachedCursor = IndexCachedCursor(this)
         while (indexCachedCursor.moveToNext()) {
             val resultMap = ColumnMap()
-            table.columns.forEach {
+            columns.forEach {
                 when (it) {
-                    is Column.Text -> resultMap[it] = indexCachedCursor.getStringOrNull(it.name)
-                    is Column.Integer -> resultMap[it] = indexCachedCursor.getIntOrNull(it.name)
-                    is Column.Real -> resultMap[it] = indexCachedCursor.getDoubleOrNull(it.name)
-                    is Column.Blob -> resultMap[it] = indexCachedCursor.getBlobOrNull(it.name)
+                    is Column.Text -> resultMap[it] = indexCachedCursor.getStringOrNull(it.cursorKey)
+                    is Column.Integer -> resultMap[it] = indexCachedCursor.getIntOrNull(it.cursorKey)
+                    is Column.Real -> resultMap[it] = indexCachedCursor.getDoubleOrNull(it.cursorKey)
+                    is Column.Blob -> resultMap[it] = indexCachedCursor.getBlobOrNull(it.cursorKey)
                 }
             }
             result.add(resultMap)

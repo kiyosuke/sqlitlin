@@ -30,49 +30,49 @@ object WhereOperationBuilder {
 
 class Eq<T>(private val column: Column<T>, private val data: T) : WhereOp() {
     override fun toSql(): String = buildString {
-        append("${column.name} = $data")
+        append("${column.tableName}.${column.name} = $data")
     }
 }
 
 class Neq<T>(private val column: Column<T>, private val data: T) : WhereOp() {
     override fun toSql(): String = buildString {
-        append("${column.name} != $data")
+        append("${column.tableName}.${column.name} != $data")
     }
 }
 
 class Less<T>(private val column: Column<T>, private val data: T) : WhereOp() {
     override fun toSql(): String = buildString {
-        append("${column.name} < $data")
+        append("${column.tableName}.${column.name} < $data")
     }
 }
 
 class LessEq<T>(private val column: Column<T>, private val data: T) : WhereOp() {
     override fun toSql(): String = buildString {
-        append("${column.name} <= $data")
+        append("${column.tableName}.${column.name} <= $data")
     }
 }
 
 class Greater<T>(private val column: Column<T>, private val data: T) : WhereOp() {
     override fun toSql(): String = buildString {
-        append("${column.name} > $data")
+        append("${column.tableName}.${column.name} > $data")
     }
 }
 
 class GreaterEq<T>(private val column: Column<T>, private val data: T) : WhereOp() {
     override fun toSql(): String = buildString {
-        append("${column.name} >= $data")
+        append("${column.tableName}.${column.name} >= $data")
     }
 }
 
 class Like(private val column: Column.Text, private val data: String) : WhereOp() {
     override fun toSql(): String = buildString {
-        append("${column.name} LIKE '$data'")
+        append("${column.tableName}.${column.name} LIKE '$data'")
     }
 }
 
 class Between<T>(private val column: Column<T>, private val data: Pair<T, T>) : WhereOp() {
     override fun toSql(): String = buildString {
-        append("${column.name} BETWEEN ${data.first} AND ${data.second}")
+        append("${column.tableName}.${column.name} BETWEEN ${data.first} AND ${data.second}")
     }
 }
 
