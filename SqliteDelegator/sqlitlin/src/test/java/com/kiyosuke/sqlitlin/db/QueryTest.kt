@@ -47,7 +47,8 @@ class QueryTest {
 
     @Test
     fun selectAge20UserSql() {
-        val expected = "SELECT users.id AS users_id,users.name AS users_name,users.age AS users_age,users.birthday AS users_birthday FROM users WHERE users.age = 20"
+        val expected =
+            "SELECT users.id AS users_id,users.name AS users_name,users.age AS users_age,users.birthday AS users_birthday FROM users WHERE users.age = 20"
         val actual = select {
             where {
                 it.age.eq(20)
@@ -71,7 +72,8 @@ class QueryTest {
 
     @Test
     fun selectNameLikeK() {
-        val expected = "SELECT users.id AS users_id,users.name AS users_name,users.age AS users_age,users.birthday AS users_birthday FROM users WHERE users.name LIKE '%k%'"
+        val expected =
+            "SELECT users.id AS users_id,users.name AS users_name,users.age AS users_age,users.birthday AS users_birthday FROM users WHERE users.name LIKE '%k%'"
         val actual = select {
             where {
                 it.name.like("%k%")
@@ -135,10 +137,12 @@ class QueryTest {
             "SELECT users.id AS users_id,users.name AS users_name,users.age AS users_age,jobs.name AS jobs_name FROM users INNER JOIN jobs ON users.id = jobs.user_id"
         val actual = innerJoin(TestJobs, onColumn = TestUser.id, joinColumn = TestJobs.userId)
             .select(TestUser.id, TestUser.name, TestUser.age, TestJobs.name) {}
+        assertEquals(expected, actual)
     }
-    
+
+    @Test
     fun selectAgeInList10_20_30() {
-        val expected = "SELECT * FROM users WHERE age IN(10, 20, 30)"
+        val expected = "SELECT users.id AS users_id,users.name AS users_name,users.age AS users_age,users.birthday AS users_birthday FROM users WHERE users.age IN(10, 20, 30)"
         val actual = select {
             where {
                 it.age.inList(listOf(10, 20, 30))
@@ -157,8 +161,9 @@ class QueryTest {
         assertEquals(expected, actual)
     }
 
+    @Test
     fun selectAgeNotInList10_20_30() {
-        val expected = "SELECT * FROM users WHERE age NOT IN(10, 20, 30)"
+        val expected = "SELECT users.id AS users_id,users.name AS users_name,users.age AS users_age,users.birthday AS users_birthday FROM users WHERE users.age NOT IN(10, 20, 30)"
         val actual = select {
             where {
                 it.age.notInList(listOf(10, 20, 30))

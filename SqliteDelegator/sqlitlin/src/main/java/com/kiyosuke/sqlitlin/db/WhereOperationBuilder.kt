@@ -84,7 +84,7 @@ class InList<T>(private val column: Column<T>, private val list: List<T>) : Wher
     override fun toSql(): String {
         if (list.isEmpty()) throw IllegalArgumentException("list is empty")
         return buildString {
-            append("${column.name} IN(")
+            append("${column.tableName}.${column.name} IN(")
             append(list.joinToString(", "))
             append(")")
         }
@@ -95,7 +95,7 @@ class NotInList<T>(private val column: Column<T>, private val list: List<T>) : W
     override fun toSql(): String {
         if (list.isEmpty()) throw IllegalArgumentException("list is empty")
         return buildString {
-            append("${column.name} NOT IN(")
+            append("${column.tableName}.${column.name} NOT IN(")
             append(list.joinToString(", "))
             append(")")
         }
