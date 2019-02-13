@@ -18,16 +18,16 @@ open class Table(name: String = "") {
     }
 
     fun text(name: String, default: String? = null) =
-        registerColumn(Column.Text(name).apply { this.default = default })
+        registerColumn(Column.Text(name, tableName).apply { this.default = default })
 
     fun integer(name: String, default: Int? = null) =
-        registerColumn(Column.Integer(name).apply { this.default = default })
+        registerColumn(Column.Integer(name, tableName).apply { this.default = default })
 
     fun real(name: String, default: Double? = null) =
-        registerColumn(Column.Real(name).apply { this.default = default })
+        registerColumn(Column.Real(name, tableName).apply { this.default = default })
 
     fun blob(name: String, default: ByteArray? = null) =
-        registerColumn(Column.Blob(name).apply { this.default = default })
+        registerColumn(Column.Blob(name, tableName).apply { this.default = default })
 
     fun <T : Column<*>> T.primaryKey() = replaceColumn(this, this.apply {
         this.primaryKey = true
