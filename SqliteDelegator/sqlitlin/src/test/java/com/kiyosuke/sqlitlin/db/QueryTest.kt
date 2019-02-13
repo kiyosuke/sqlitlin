@@ -142,7 +142,8 @@ class QueryTest {
 
     @Test
     fun selectAgeInList10_20_30() {
-        val expected = "SELECT users.id AS users_id,users.name AS users_name,users.age AS users_age,users.birthday AS users_birthday FROM users WHERE users.age IN(10, 20, 30)"
+        val expected =
+            "SELECT users.id AS users_id,users.name AS users_name,users.age AS users_age,users.birthday AS users_birthday FROM users WHERE users.age IN(10, 20, 30)"
         val actual = select {
             where {
                 it.age.inList(listOf(10, 20, 30))
@@ -163,12 +164,56 @@ class QueryTest {
 
     @Test
     fun selectAgeNotInList10_20_30() {
-        val expected = "SELECT users.id AS users_id,users.name AS users_name,users.age AS users_age,users.birthday AS users_birthday FROM users WHERE users.age NOT IN(10, 20, 30)"
+        val expected =
+            "SELECT users.id AS users_id,users.name AS users_name,users.age AS users_age,users.birthday AS users_birthday FROM users WHERE users.age NOT IN(10, 20, 30)"
         val actual = select {
             where {
                 it.age.notInList(listOf(10, 20, 30))
             }
         }
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun selectGroupByAge() {
+        val expected =
+            "SELECT users.id AS users_id,users.name AS users_name,users.age AS users_age,users.birthday AS users_birthday " +
+                    "FROM users " +
+                    "GROUP BY users.age"
+        val actual = select {
+            groupBy(TestUser.age)
+        }
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun selectWhereAgeBetween10_30groupByAge() {
+        val expected =
+            "SELECT users.id AS users_id,users.name AS users_name,users.age AS users_age,users.birthday AS users_birthday FROM users " +
+                    "WHERE users.age BETWEEN 10 AND 30 " +
+                    "GROUP BY users.age"
+        val actual =
+            select {
+                where {
+                    TestUser.age between (10 to 30)
+                }
+                groupBy(TestUser.age)
+            }
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun selectGroupByAgeHavingBetweenAge10_30() {
+        val expected =
+            "SELECT users.id AS users_id,users.name AS users_name,users.age AS users_age,users.birthday AS users_birthday FROM users " +
+                    "GROUP BY users.age " +
+                    "HAVING users.age BETWEEN 10 AND 30"
+        val actual =
+            select {
+                groupBy(TestUser.age) having {
+                    TestUser.age between (10 to 30)
+                }
+            }
         assertEquals(expected, actual)
     }
 
