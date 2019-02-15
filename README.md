@@ -39,6 +39,14 @@ object Users : Table("users") {
     val age = integer("age").nullable()
 }
 ```
+```
+data class User(
+    val id: Int,
+    val name: String,
+    val age: Int?
+)
+```
+
 
 ## データベースアクセス
 ```
@@ -85,13 +93,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     }
     
     private fun getUser() = launch {
-        usersDao.getUser().forEach { columnMap ->
-            println(columnMap.toString())
+        usersDao.getUser().map { columnMap ->
+            columnMap.parse<User>()
+        }.forEach { user ->
+            println("user: $user")
         }
     }
 }
 ```
-
-
-
-
