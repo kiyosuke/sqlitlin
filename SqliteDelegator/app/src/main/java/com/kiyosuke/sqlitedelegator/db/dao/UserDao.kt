@@ -34,5 +34,17 @@ class UserDao(database: SupportDatabase) : Dao<Users>(database) {
             }
         }
 
+    suspend fun maxAge() = max(Users.age)
+
+    suspend fun minAge() = min(Users.age)
+
+    suspend fun countAge() =
+        count(Users.name) {
+            where {
+                Users.age between (10 to 20)
+            }
+            groupBy(Users.age)
+        }
+
     suspend fun getAllUsers() = selectAll()
 }
