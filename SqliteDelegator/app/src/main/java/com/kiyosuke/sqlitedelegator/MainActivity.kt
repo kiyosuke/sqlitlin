@@ -3,6 +3,7 @@ package com.kiyosuke.sqlitedelegator
 import android.annotation.SuppressLint
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import com.kiyosuke.sqlitedelegator.db.Users
 import com.kiyosuke.sqlitlin.db.ColumnMap
 import kotlinx.android.synthetic.main.activity_main.*
@@ -10,7 +11,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import java.lang.Exception
 import kotlin.coroutines.CoroutineContext
 
 class MainActivity : AppCompatActivity(), CoroutineScope {
@@ -30,49 +30,21 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
         buttonAll.setOnClickListener {
             getUsers()
+            userCount()
+            userMaxAge()
+            userMinAge()
+            userAges()
         }
 
         buttonAge.setOnClickListener {
-            getUser("kiyo")
+            insertUser()
         }
     }
 
-    @SuppressLint("SetTextI18n")
     private fun getUsers() = launch {
-        userDao.getAllUsers().forEach { columnMap: ColumnMap ->
-            val text = buildString {
-                append("Id: ${columnMap[Users.id]}")
-                append("\n")
-                append("Name: ${columnMap[Users.name]}")
-                append("\n")
-                append("Age: ${columnMap[Users.age]}")
-                append("\n")
-                append("\n")
-            }
-            textView.text = "${textView.text} $text"
-        }
-    }
-
-    @SuppressLint("SetTextI18n")
-    private fun getUser(age: Int) = launch {
-        userDao.getUser(age).forEach { columnMap: ColumnMap ->
-            val text = buildString {
-                append("Id: ${columnMap[Users.id]}")
-                append("\n")
-                append("Name: ${columnMap[Users.name]}")
-                append("\n")
-                append("Age: ${columnMap[Users.age]}")
-                append("\n")
-                append("\n")
-            }
-            textView.text = "${textView.text} $text"
-        }
-    }
-
-    private fun getUser(name: String) = launch {
         try {
-            userDao.getUser(name).forEach { columnMap ->
-                val text = buildString {
+            val text = buildString {
+                userDao.getAllUsers().forEach { columnMap: ColumnMap ->
                     append("Id: ${columnMap[Users.id]}")
                     append("\n")
                     append("Name: ${columnMap[Users.name]}")
@@ -81,8 +53,82 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                     append("\n")
                     append("\n")
                 }
-                textView.text = "${textView.text} $text"
             }
+            textView.text = text
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun getUser(age: Int) = launch {
+        try {
+            val text = buildString {
+                userDao.getUser(age).forEach { columnMap: ColumnMap ->
+                    append("Id: ${columnMap[Users.id]}")
+                    append("\n")
+                    append("Name: ${columnMap[Users.name]}")
+                    append("\n")
+                    append("Age: ${columnMap[Users.age]}")
+                    append("\n")
+                    append("\n")
+                }
+            }
+            textView.text = text
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun getUser(name: String) = launch {
+        try {
+            val text = buildString {
+                userDao.getUser(name).forEach { columnMap ->
+                    append("Id: ${columnMap[Users.id]}")
+                    append("\n")
+                    append("Name: ${columnMap[Users.name]}")
+                    append("\n")
+                    append("Age: ${columnMap[Users.age]}")
+                    append("\n")
+                    append("\n")
+                }
+            }
+            textView.text = text
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun userCount() = launch {
+        try {
+            val count = userDao.countAll()
+            Log.d("MainActivity", "count: $count")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun userMaxAge() = launch {
+        try {
+            val age = userDao.maxAge()
+            Log.d("MainActivity", "maxAge: $age")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun userMinAge() = launch {
+        try {
+            val age = userDao.minAge()
+            Log.d("MainActivity", "minAge: $age")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun userAges() = launch {
+        try {
+            val result = userDao.countAge()
+            Log.d("MainActivity", "countAge: $result")
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -98,7 +144,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             this[Users.name] = "john"
             this[Users.age] = 31
         }
-        userDao.insert(listOf(kiyo, john))
+        try {
+            userDao.insert(listOf(kiyo, john))
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
 }
