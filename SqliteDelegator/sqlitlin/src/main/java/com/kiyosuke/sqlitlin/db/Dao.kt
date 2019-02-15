@@ -10,6 +10,7 @@ import com.kiyosuke.sqlitlin.db.core.adapter.EntityInsertionAdapter
 import com.kiyosuke.sqlitlin.db.core.adapter.SharedSQLiteStatement
 import com.kiyosuke.sqlitlin.db.core.adapter.bind
 import com.kiyosuke.sqlitlin.db.core.common.IndexCachedCursor
+import com.kiyosuke.sqlitlin.db.core.common.wrap
 import com.kiyosuke.sqlitlin.db.core.exception.EmptyResultSetException
 import com.kiyosuke.sqlitlin.db.table.Table
 import kotlinx.coroutines.Dispatchers
@@ -103,6 +104,45 @@ abstract class Dao<T : Table>(private val database: SupportDatabase) {
         return InnerJoin(joinTable, onColumn, joinColumn)
     }
 
+    suspend fun count(column: Column<*>, query: (Count<T>.() -> Unit)? = null): List<Int> =
+        withContext(Dispatchers.IO) {
+            val sql = Count(listOf(column), table).apply { query?.invoke(this) }.toSql()
+            return@withContext database.query(sql).use { c ->
+                val result = mutableListOf<Int>()
+                while (c.moveToNext()) {
+                    result.add(c.getInt(0))
+                }
+                result
+            }
+        }
+
+    suspend fun countAll(): Int =
+        withContext(Dispatchers.IO) {
+            val sql = Count(emptyList(), table).toSql()
+            return@withContext database.query(sql).use { c ->
+                c.moveToFirst()
+                c.getInt(0)
+            }
+        }
+
+    suspend fun max(column: Column<*>, query: (Max<T>.() -> Unit)? = null): Int =
+        withContext(Dispatchers.IO) {
+            val sql = Max(listOf(column), table).apply { query?.invoke(this) }.toSql()
+            return@withContext database.query(sql).wrap().use { c ->
+                c.moveToFirst()
+                c.getInt(column.cursorKey)
+            }
+        }
+
+    suspend fun min(column: Column<*>, query: (Min<T>.() -> Unit)? = null): Int =
+        withContext(Dispatchers.IO) {
+            val sql = Min(listOf(column), table).apply { query?.invoke(this) }.toSql()
+            return@withContext database.query(sql).wrap().use { c ->
+                c.moveToFirst()
+                c.getInt(column.cursorKey)
+            }
+        }
+
     suspend fun insert(item: ColumnMap) = withContext(Dispatchers.IO) {
         database.runInTransaction {
             insertAdapter.insert(item)
@@ -163,22 +203,22 @@ abstract class Dao<T : Table>(private val database: SupportDatabase) {
         return toResultMaps(table.columns)
     }
 
-    private fun Cursor.toResultMaps(columns: List<Column<*>>): List<ColumnMap> {
-        val result: MutableList<ColumnMap> = mutableListOf()
-        val indexCachedCursor = IndexCachedCursor(this)
-        while (indexCachedCursor.moveToNext()) {
-            val resultMap = ColumnMap()
-            columns.forEach {
-                when (it) {
-                    is Column.Text -> resultMap[it] = indexCachedCursor.getStringOrNull(it.cursorKey)
-                    is Column.Integer -> resultMap[it] = indexCachedCursor.getIntOrNull(it.cursorKey)
-                    is Column.Real -> resultMap[it] = indexCachedCursor.getDoubleOrNull(it.cursorKey)
-                    is Column.Blob -> resultMap[it] = indexCachedCursor.getBlobOrNull(it.cursorKey)
+    private fun Cursor.toResultMaps(columns: List<Column<*>>): List<ColumnMap> =
+        IndexCachedCursor(this).use { indexCachedCursor ->
+            val result: MutableList<ColumnMap> = mutableListOf()
+            while (indexCachedCursor.moveToNext()) {
+                val resultMap = ColumnMap()
+                columns.forEach {
+                    when (it) {
+                        is Column.Text -> resultMap[it] = indexCachedCursor.getStringOrNull(it.cursorKey)
+                        is Column.Integer -> resultMap[it] = indexCachedCursor.getIntOrNull(it.cursorKey)
+                        is Column.Real -> resultMap[it] = indexCachedCursor.getDoubleOrNull(it.cursorKey)
+                        is Column.Blob -> resultMap[it] = indexCachedCursor.getBlobOrNull(it.cursorKey)
+                    }
                 }
+                result.add(resultMap)
             }
-            result.add(resultMap)
+            return@use result
         }
-        return result
-    }
 
 }
