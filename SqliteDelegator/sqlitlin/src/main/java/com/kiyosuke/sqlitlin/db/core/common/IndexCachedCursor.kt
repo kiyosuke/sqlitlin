@@ -69,3 +69,5 @@ class IndexCachedCursor(private val cursor: Cursor) : Cursor by cursor {
         return index
     }
 }
+
+fun Cursor.wrap() = IndexCachedCursor(this)
