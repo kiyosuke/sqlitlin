@@ -24,6 +24,10 @@ class ColumnMap {
         return result as T
     }
 
+    fun forEach(action: (Map.Entry<Column<*>, Any?>) -> Unit) {
+        this.map.forEach(action)
+    }
+
     operator fun <T> set(key: Column<T>, value: T?) {
         this.map[key] = value
     }
