@@ -93,9 +93,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     }
     
     private fun getUser() = launch {
-        usersDao.getUser().map { columnMap ->
-            columnMap.parse<User>()
-        }.forEach { user ->
+        usersDao.getUser().forEach { user ->
             println("user: $user")
         }
     }
