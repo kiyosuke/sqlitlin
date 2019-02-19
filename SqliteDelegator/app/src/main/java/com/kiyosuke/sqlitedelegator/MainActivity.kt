@@ -7,10 +7,7 @@ import android.util.Log
 import com.kiyosuke.sqlitedelegator.db.Users
 import com.kiyosuke.sqlitlin.db.ColumnMap
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 
 class MainActivity : AppCompatActivity(), CoroutineScope {
@@ -100,7 +97,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
     private fun userCount() = launch {
         try {
-            val count = userDao.countAll()
+            val count = withContext(Dispatchers.IO) { userDao.countAll() }
             Log.d("MainActivity", "count: $count")
         } catch (e: Exception) {
             e.printStackTrace()
@@ -145,7 +142,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             this[Users.age] = 31
         }
         try {
-            userDao.insert(listOf(kiyo, john))
+            userDao.insertUsers(listOf(kiyo, john))
         } catch (e: Exception) {
             e.printStackTrace()
         }
