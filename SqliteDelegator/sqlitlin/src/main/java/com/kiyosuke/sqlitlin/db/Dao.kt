@@ -2,7 +2,6 @@ package com.kiyosuke.sqlitlin.db
 
 import android.database.Cursor
 import android.database.sqlite.SQLiteStatement
-import android.util.Log
 import com.kiyosuke.sqlitlin.db.column.Column
 import com.kiyosuke.sqlitlin.db.core.SupportDatabase
 import com.kiyosuke.sqlitlin.db.core.adapter.EntityDeletionOrUpdateAdapter
@@ -13,8 +12,6 @@ import com.kiyosuke.sqlitlin.db.core.common.IndexCachedCursor
 import com.kiyosuke.sqlitlin.db.core.common.wrap
 import com.kiyosuke.sqlitlin.db.core.exception.EmptyResultSetException
 import com.kiyosuke.sqlitlin.db.table.Table
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 abstract class Dao<T : Table>(private val database: SupportDatabase) {
     abstract val table: T
@@ -73,106 +70,97 @@ abstract class Dao<T : Table>(private val database: SupportDatabase) {
         }
     }
 
-    suspend fun select(vararg columns: Column<*> = emptyArray(), query: Select<T>.() -> Unit): List<ColumnMap> =
-        withContext(Dispatchers.IO) {
-            val sql = Select(if (columns.isEmpty()) table.columns else listOf(*columns), table).apply(query).toSql()
-            val result = database.query(sql).toResultMaps(table)
-            if (result.isEmpty()) throw EmptyResultSetException("Query returned empty result set: $sql")
-            return@withContext result
-        }
+    fun select(vararg columns: Column<*> = emptyArray(), query: Select<T>.() -> Unit): List<ColumnMap> {
+        val sql = Select(if (columns.isEmpty()) table.columns else listOf(*columns), table).apply(query).toSql()
+        val result = database.query(sql).toResultMaps(table)
+        if (result.isEmpty()) throw EmptyResultSetException("Query returned empty result set: $sql")
+        return result
+    }
 
-    suspend fun Join.select(
+    fun Join.select(
         vararg columns: Column<*> = emptyArray(),
         query: Select<T>.() -> Unit
-    ): List<ColumnMap> = withContext(Dispatchers.IO) {
+    ): List<ColumnMap> {
         if (columns.isEmpty()) throw IllegalArgumentException("columns is empty.")
         val sql = Select(listOf(*columns), table, this@select).apply(query).toSql()
         val result = database.query(sql).toResultMaps(listOf(*columns))
         if (result.isEmpty()) throw EmptyResultSetException("Query returned empty result set: $sql")
-        return@withContext result
+        return result
     }
 
-    suspend fun selectAll(): List<ColumnMap> =
-        withContext(Dispatchers.IO) {
-            val sql = Select(table.columns, table).toSql()
-            val result = database.query(sql).toResultMaps(table)
-            if (result.isEmpty()) throw EmptyResultSetException("Query returned empty result set: $sql")
-            return@withContext result
-        }
+    fun selectAll(): List<ColumnMap> {
+        val sql = Select(table.columns, table).toSql()
+        val result = database.query(sql).toResultMaps(table)
+        if (result.isEmpty()) throw EmptyResultSetException("Query returned empty result set: $sql")
+        return result
+    }
 
     fun <JT : Table> innerJoin(joinTable: JT, onColumn: Column<*>, joinColumn: Column<*>): InnerJoin {
         return InnerJoin(joinTable, onColumn, joinColumn)
     }
 
-    suspend fun count(column: Column<*>, query: (Count<T>.() -> Unit)? = null): List<Int> =
-        withContext(Dispatchers.IO) {
-            val sql = Count(listOf(column), table).apply { query?.invoke(this) }.toSql()
-            return@withContext database.query(sql).use { c ->
-                val result = mutableListOf<Int>()
-                while (c.moveToNext()) {
-                    result.add(c.getInt(0))
-                }
-                result
+    fun count(column: Column<*>, query: (Count<T>.() -> Unit)? = null): List<Int> {
+        val sql = Count(listOf(column), table).apply { query?.invoke(this) }.toSql()
+        return database.query(sql).use { c ->
+            val result = mutableListOf<Int>()
+            while (c.moveToNext()) {
+                result.add(c.getInt(0))
             }
+            result
         }
+    }
 
-    suspend fun countAll(): Int =
-        withContext(Dispatchers.IO) {
-            val sql = Count(emptyList(), table).toSql()
-            return@withContext database.query(sql).use { c ->
-                c.moveToFirst()
-                c.getInt(0)
-            }
+    fun countAll(): Int {
+        val sql = Count(emptyList(), table).toSql()
+        return database.query(sql).use { c ->
+            c.moveToFirst()
+            c.getInt(0)
         }
+    }
 
-    suspend fun max(column: Column<*>, query: (Max<T>.() -> Unit)? = null): Int =
-        withContext(Dispatchers.IO) {
-            val sql = Max(listOf(column), table).apply { query?.invoke(this) }.toSql()
-            return@withContext database.query(sql).wrap().use { c ->
-                c.moveToFirst()
-                c.getInt(column.cursorKey)
-            }
+    fun max(column: Column<*>, query: (Max<T>.() -> Unit)? = null): Int {
+        val sql = Max(listOf(column), table).apply { query?.invoke(this) }.toSql()
+        return database.query(sql).wrap().use { c ->
+            c.moveToFirst()
+            c.getInt(column.cursorKey)
         }
+    }
 
-    suspend fun min(column: Column<*>, query: (Min<T>.() -> Unit)? = null): Int =
-        withContext(Dispatchers.IO) {
-            val sql = Min(listOf(column), table).apply { query?.invoke(this) }.toSql()
-            return@withContext database.query(sql).wrap().use { c ->
-                c.moveToFirst()
-                c.getInt(column.cursorKey)
-            }
+    fun min(column: Column<*>, query: (Min<T>.() -> Unit)? = null): Int {
+        val sql = Min(listOf(column), table).apply { query?.invoke(this) }.toSql()
+        return database.query(sql).wrap().use { c ->
+            c.moveToFirst()
+            c.getInt(column.cursorKey)
         }
+    }
 
-    suspend fun insert(item: ColumnMap) = withContext(Dispatchers.IO) {
+    fun insert(item: ColumnMap) {
         database.runInTransaction {
             insertAdapter.insert(item)
         }
     }
 
-    suspend fun insert(items: List<ColumnMap>) = withContext(Dispatchers.IO) {
+    fun insert(items: List<ColumnMap>) {
         database.runInTransaction {
-            Log.d("Dao", "insert: $items")
             insertAdapter.insert(items)
         }
     }
 
-    suspend fun update(item: ColumnMap) = withContext(Dispatchers.IO) {
+    fun update(item: ColumnMap) {
         database.runInTransaction {
             updationAdapter.handle(item)
         }
     }
 
-    suspend fun update(items: List<ColumnMap>) = withContext(Dispatchers.IO) {
+    fun update(items: List<ColumnMap>) {
         database.runInTransaction {
             updationAdapter.handleMultiple(items)
         }
     }
 
-    suspend fun delete(item: ColumnMap) = withContext(Dispatchers.IO) {
-        deletionAdapter.handle(item)
-    }
+    fun delete(item: ColumnMap) = deletionAdapter.handle(item)
 
-    suspend fun deleteAll() = withContext(Dispatchers.IO) {
+    fun deleteAll() {
         val stmt = allDeletionAdapter.acquire()
         database.beginTransaction()
         try {
@@ -184,7 +172,7 @@ abstract class Dao<T : Table>(private val database: SupportDatabase) {
         }
     }
 
-    suspend fun truncate() = withContext(Dispatchers.IO) {
+    fun truncate() {
         val stmt = allDeletionAdapter.acquire()
         val sqliteSequenceStmt = deletionSqliteSequenceAdapter.acquire()
         database.beginTransaction()
@@ -220,5 +208,4 @@ abstract class Dao<T : Table>(private val database: SupportDatabase) {
             }
             return@use result
         }
-
 }
