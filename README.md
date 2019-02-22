@@ -53,7 +53,7 @@ data class User(
 class UsersDao(database: SupportDatabase) : Dao<Users>(database) {
     override val table: Users = Users
     
-    suspend fun getUser() = 
+    fun getUser() = 
         select {
             where {
                 Users.age between (10 to 30)
@@ -99,3 +99,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     }
 }
 ```
+
+## 注意
+
+*  データベース操作はメインスレッド以外のスレッドで行ってください。メインスレッドで実行された場合例外が発生します。
+*  SELECTした結果が0件の場合 EmptyResultSetException が発生します。
