@@ -23,9 +23,11 @@ abstract class NormalDatabase(context: Context, name: String, version: Int) :
      */
     abstract fun createTable(db: SQLiteDatabase)
 
-    override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
-        // FIXME: データベースの変更があればここにマイグレーション処理を記述
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        migration(db, oldVersion, newVersion)
     }
+
+    abstract fun migration(db: SQLiteDatabase, oldVersion: Int, newVersion: Int)
 
     /**
      * SQLからSQLiteStatement生成
