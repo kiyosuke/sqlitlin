@@ -83,6 +83,18 @@ class QueryTest {
     }
 
     @Test
+    fun selectNameLikeKAddEscape() {
+        val expected =
+            "SELECT users.id AS users_id,users.name AS users_name,users.age AS users_age,users.birthday AS users_birthday FROM users WHERE users.name LIKE '%k%' ESCAPE '\\'"
+        val actual = select {
+            where {
+                it.name.like("%k%", "\\")
+            }
+        }
+        assertEquals(expected, actual)
+    }
+
+    @Test
     fun selectAge20or30Limit30() {
         val expected =
             "SELECT users.id AS users_id,users.name AS users_name,users.age AS users_age,users.birthday AS users_birthday FROM users WHERE users.age = 20 OR users.age = 30 LIMIT 30 OFFSET 0"
@@ -212,6 +224,36 @@ class QueryTest {
             select {
                 groupBy(TestUser.age) having {
                     TestUser.age between (10 to 30)
+                }
+            }
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun selectOpMax() {
+        val expected =
+            "SELECT users.id AS users_id,users.name AS users_name,users.age AS users_age,users.birthday AS users_birthday FROM users " +
+                    "GROUP BY users.age " +
+                    "HAVING MAX(users.age)"
+        val actual =
+            select {
+                groupBy(TestUser.age) having {
+                    max(TestUser.age)
+                }
+            }
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun selectOpMin() {
+        val expected =
+            "SELECT users.id AS users_id,users.name AS users_name,users.age AS users_age,users.birthday AS users_birthday FROM users " +
+                    "GROUP BY users.age " +
+                    "HAVING MIN(users.age)"
+        val actual =
+            select {
+                groupBy(TestUser.age) having {
+                    min(TestUser.age)
                 }
             }
         assertEquals(expected, actual)
