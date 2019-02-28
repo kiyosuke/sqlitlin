@@ -117,8 +117,4 @@ abstract class NormalDatabase(context: Context, name: String, version: Int) :
             endTransaction()
         }
     }
-
-    companion object {
-        private const val DB_PASSWORD = "gr295qkpx6pfHoympbXjsg=="
-    }
 }
