@@ -41,6 +41,10 @@ open class Table(name: String = "") {
         this.autoIncrement = true
     })
 
+    fun <T : Column<*>> T.unique() = replaceColumn(this, this.apply {
+        this.unique = true
+    })
+
     val createSql: String
         get() = createStatement()
 
@@ -60,13 +64,15 @@ open class Table(name: String = "") {
                 when (c) {
                     is Column.Text -> {
                         append("${c.name} TEXT")
+                        if (c.unique) append(" UNIQUE")
                         if (!c.nullable) append(" NOT NULL")
                         if (c.primaryKey) append(" PRIMARY KEY")
-                        if (c.default != null) append(" DEFAULT ${c.default}")
+                        if (c.default != null) append(" DEFAULT '${c.default}'")
                     }
 
                     is Column.Integer -> {
                         append("${c.name} INTEGER")
+                        if (c.unique) append(" UNIQUE")
                         if (!c.nullable) append(" NOT NULL")
                         if (c.primaryKey) append(" PRIMARY KEY")
                         if (c.autoIncrement) append(" AUTOINCREMENT")
@@ -75,6 +81,7 @@ open class Table(name: String = "") {
 
                     is Column.Real -> {
                         append("${c.name} REAL")
+                        if (c.unique) append(" UNIQUE")
                         if (!c.nullable) append(" NOT NULL")
                         if (c.primaryKey) append(" PRIMARY KEY")
                         if (c.default != null) append(" DEFAULT ${c.default}")
@@ -82,6 +89,7 @@ open class Table(name: String = "") {
 
                     is Column.Blob -> {
                         append("${c.name} BLOB")
+                        if (c.unique) append(" UNIQUE")
                         if (!c.nullable) append(" NOT NULL")
                         if (c.primaryKey) append(" PRIMARY KEY")
                         if (c.default != null) append(" DEFAULT ${c.default}")

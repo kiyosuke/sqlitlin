@@ -6,6 +6,7 @@ sealed class Column<T> {
     abstract val tableName: String
     var nullable: Boolean = false
     var primaryKey: Boolean = false
+    var unique: Boolean = false
     var default: T? = null
 
     data class Text(override val name: String, override val tableName: String) : Column<String>()
