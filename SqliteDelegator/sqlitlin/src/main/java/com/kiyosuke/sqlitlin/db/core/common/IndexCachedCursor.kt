@@ -47,27 +47,15 @@ class IndexCachedCursor(private val cursor: Cursor) : Cursor by cursor {
 
     fun getDoubleOrNull(index: Int): Double? = if (this.isNull(index)) null else this.getDouble(index)
 
-    override fun getColumnIndex(name: String): Int {
-        val index: Int
-        if (indexCache.containsKey(name)) {
-            index = indexCache.getValue(name)
-        } else {
-            index = cursor.getColumnIndex(name)
-            indexCache[name] = index
+    override fun getColumnIndex(name: String): Int =
+        indexCache.getOrPut(name) {
+            cursor.getColumnIndex(name)
         }
-        return index
-    }
 
-    override fun getColumnIndexOrThrow(name: String): Int {
-        val index: Int
-        if (indexCache.containsKey(name)) {
-            index = indexCache.getValue(name)
-        } else {
-            index = cursor.getColumnIndexOrThrow(name)
-            indexCache[name] = index
+    override fun getColumnIndexOrThrow(name: String): Int =
+        indexCache.getOrPut(name) {
+            cursor.getColumnIndexOrThrow(name)
         }
-        return index
-    }
 }
 
 fun Cursor.wrap() = IndexCachedCursor(this)
