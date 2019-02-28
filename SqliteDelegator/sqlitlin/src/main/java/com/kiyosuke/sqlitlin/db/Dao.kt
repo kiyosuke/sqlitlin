@@ -199,7 +199,8 @@ abstract class Dao<T : Table>(private val database: SupportDatabase) {
                 columns.forEach {
                     when (it) {
                         is Column.Text -> resultMap[it] = indexCachedCursor.getStringOrNull(it.cursorKey)
-                        is Column.Integer -> resultMap[it] = indexCachedCursor.getIntOrNull(it.cursorKey)
+                        is Column.Integer -> resultMap[it] = indexCachedCursor.getInt(it.cursorKey)
+                        is Column.Long -> resultMap[it] = indexCachedCursor.getLong(it.cursorKey)
                         is Column.Real -> resultMap[it] = indexCachedCursor.getDoubleOrNull(it.cursorKey)
                         is Column.Blob -> resultMap[it] = indexCachedCursor.getBlobOrNull(it.cursorKey)
                     }

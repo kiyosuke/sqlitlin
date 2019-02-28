@@ -23,6 +23,9 @@ open class Table(name: String = "") {
     fun integer(name: String, default: Int? = null) =
         registerColumn(Column.Integer(name, tableName).apply { this.default = default })
 
+    fun long(name: String, default: Long? = null) =
+        registerColumn(Column.Long(name, tableName).apply { this.default = default })
+
     fun real(name: String, default: Double? = null) =
         registerColumn(Column.Real(name, tableName).apply { this.default = default })
 
@@ -38,6 +41,10 @@ open class Table(name: String = "") {
     })
 
     fun Column.Integer.autoIncrement() = replaceColumn(this, this.apply {
+        this.autoIncrement = true
+    })
+
+    fun Column.Long.autoIncrement() = replaceColumn(this, this.apply {
         this.autoIncrement = true
     })
 
@@ -57,6 +64,9 @@ open class Table(name: String = "") {
     val deleteSql: String
         get() = createDeleteStatement()
 
+    val dropSql: String
+        get() = createDropStatement()
+
     private fun createStatement(): String {
         val sql = buildString {
             append("CREATE TABLE IF NOT EXISTS $tableName(")
@@ -71,6 +81,15 @@ open class Table(name: String = "") {
                     }
 
                     is Column.Integer -> {
+                        append("${c.name} INTEGER")
+                        if (c.unique) append(" UNIQUE")
+                        if (!c.nullable) append(" NOT NULL")
+                        if (c.primaryKey) append(" PRIMARY KEY")
+                        if (c.autoIncrement) append(" AUTOINCREMENT")
+                        if (c.default != null) append(" DEFAULT ${c.default}")
+                    }
+
+                    is Column.Long -> {
                         append("${c.name} INTEGER")
                         if (c.unique) append(" UNIQUE")
                         if (!c.nullable) append(" NOT NULL")
@@ -138,5 +157,7 @@ open class Table(name: String = "") {
         Log.d("Table", "createDeleteStatement: $sql")
         return sql
     }
+
+    private fun createDropStatement(): String = "DROP TABLE $tableName"
 
 }

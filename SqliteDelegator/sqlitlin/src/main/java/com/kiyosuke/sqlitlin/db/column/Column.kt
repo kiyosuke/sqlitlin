@@ -15,6 +15,10 @@ sealed class Column<T> {
         var autoIncrement = false
     }
 
+    data class Long(override val name: String, override val tableName: String) : Column<kotlin.Long>() {
+        var autoIncrement = false
+    }
+
     data class Real(override val name: String, override val tableName: String) : Column<Double>()
 
     data class Blob(override val name: String, override val tableName: String) : Column<ByteArray>()
