@@ -8,7 +8,6 @@ import com.kiyosuke.sqlitlin.db.core.adapter.EntityDeletionOrUpdateAdapter
 import com.kiyosuke.sqlitlin.db.core.adapter.EntityInsertionAdapter
 import com.kiyosuke.sqlitlin.db.core.adapter.SharedSQLiteStatement
 import com.kiyosuke.sqlitlin.db.core.adapter.bind
-import com.kiyosuke.sqlitlin.db.core.common.IndexCachedCursor
 import com.kiyosuke.sqlitlin.db.core.common.wrap
 import com.kiyosuke.sqlitlin.db.core.exception.EmptyResultSetException
 import com.kiyosuke.sqlitlin.db.table.Table
@@ -70,28 +69,28 @@ abstract class Dao<T : Table>(private val database: SupportDatabase) {
         }
     }
 
-    fun select(vararg columns: Column<*> = emptyArray(), query: Select<T>.() -> Unit): List<ColumnMap> {
+    fun select(vararg columns: Column<*> = emptyArray(), query: Select<T>.() -> Unit): ResultSet {
         val sql = Select(if (columns.isEmpty()) table.columns else listOf(*columns), table).apply(query).toSql()
-        val result = database.query(sql).toResultMaps(table)
-        if (result.isEmpty()) throw EmptyResultSetException("Query returned empty result set: $sql")
+        val result = database.query(sql).toResultSet()
+        if (result.getCount() <= 0) throw EmptyResultSetException("Query returned empty result set: $sql")
         return result
     }
 
     fun Join.select(
         vararg columns: Column<*> = emptyArray(),
         query: Select<T>.() -> Unit
-    ): List<ColumnMap> {
+    ): ResultSet {
         if (columns.isEmpty()) throw IllegalArgumentException("columns is empty.")
         val sql = Select(listOf(*columns), table, this@select).apply(query).toSql()
-        val result = database.query(sql).toResultMaps(listOf(*columns))
-        if (result.isEmpty()) throw EmptyResultSetException("Query returned empty result set: $sql")
+        val result = database.query(sql).toResultSet()
+        if (result.getCount() <= 0) throw EmptyResultSetException("Query returned empty result set: $sql")
         return result
     }
 
-    fun selectAll(): List<ColumnMap> {
+    fun selectAll(): ResultSet {
         val sql = Select(table.columns, table).toSql()
-        val result = database.query(sql).toResultMaps(table)
-        if (result.isEmpty()) throw EmptyResultSetException("Query returned empty result set: $sql")
+        val result = database.query(sql).toResultSet()
+        if (result.getCount() <= 0) throw EmptyResultSetException("Query returned empty result set: $sql")
         return result
     }
 
@@ -187,26 +186,7 @@ abstract class Dao<T : Table>(private val database: SupportDatabase) {
         }
     }
 
-    private fun Cursor.toResultMaps(table: Table): List<ColumnMap> {
-        return toResultMaps(table.columns)
+    private fun Cursor.toResultSet(): ResultSet {
+        return ResultSet(this)
     }
-
-    private fun Cursor.toResultMaps(columns: List<Column<*>>): List<ColumnMap> =
-        IndexCachedCursor(this).use { indexCachedCursor ->
-            val result: MutableList<ColumnMap> = mutableListOf()
-            while (indexCachedCursor.moveToNext()) {
-                val resultMap = ColumnMap()
-                columns.forEach {
-                    when (it) {
-                        is Column.Text -> resultMap[it] = indexCachedCursor.getStringOrNull(it.cursorKey)
-                        is Column.Integer -> resultMap[it] = indexCachedCursor.getInt(it.cursorKey)
-                        is Column.Long -> resultMap[it] = indexCachedCursor.getLong(it.cursorKey)
-                        is Column.Real -> resultMap[it] = indexCachedCursor.getDoubleOrNull(it.cursorKey)
-                        is Column.Blob -> resultMap[it] = indexCachedCursor.getBlobOrNull(it.cursorKey)
-                    }
-                }
-                result.add(resultMap)
-            }
-            return@use result
-        }
 }
