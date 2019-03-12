@@ -10,9 +10,8 @@ import android.os.Looper
 /**
  * 暗号化したDB操作クラス
  */
-abstract class NormalDatabase(context: Context, name: String, version: Int) :
+abstract class NormalDatabase(context: Context, name: String, version: Int, private val isAssertThread: Boolean = true) :
     SQLiteOpenHelper(context, name, null, version), SupportDatabase {
-
 
     override fun onCreate(db: SQLiteDatabase) {
         createTable(db)
@@ -55,6 +54,7 @@ abstract class NormalDatabase(context: Context, name: String, version: Int) :
      * メインスレッドからアクセスされたら例外を投げる
      */
     override fun assertMainThread() {
+        if (!isAssertThread) return
         if (Looper.myLooper() == Looper.getMainLooper()) throw IllegalStateException("current thread is MainThread.")
     }
 
