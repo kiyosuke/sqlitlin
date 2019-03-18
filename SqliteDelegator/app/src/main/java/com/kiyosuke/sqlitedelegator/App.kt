@@ -3,6 +3,7 @@ package com.kiyosuke.sqlitedelegator
 import android.app.Application
 import android.util.Log
 import com.kiyosuke.sqlitedelegator.db.Users
+import com.kiyosuke.sqlitedelegator.db.cipher.CipherSQLiteOpenHelperFactory
 import com.kiyosuke.sqlitlin.db.core.Migration
 import com.kiyosuke.sqlitlin.db.core.Sqlitlin
 import com.kiyosuke.sqlitlin.db.core.support.SupportSQLiteDatabase
@@ -16,6 +17,7 @@ class App : Application() {
         sqlitlin = Sqlitlin.builder(applicationContext, "sqlitlin.db", 2)
             .addTables(Users)
             .addMigrations(MIGRATION_1_2)
+            .factory(CipherSQLiteOpenHelperFactory()) // Factoryをセットすると自分で作成したDBクラスを使えます
             .build()
     }
 
