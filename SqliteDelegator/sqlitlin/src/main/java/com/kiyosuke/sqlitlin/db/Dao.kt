@@ -1,9 +1,9 @@
 package com.kiyosuke.sqlitlin.db
 
 import android.database.Cursor
-import android.database.sqlite.SQLiteStatement
 import com.kiyosuke.sqlitlin.db.column.Column
-import com.kiyosuke.sqlitlin.db.core.SupportDatabase
+import com.kiyosuke.sqlitlin.db.core.Sqlitlin
+import com.kiyosuke.sqlitlin.db.core.support.SupportSQLiteStatement
 import com.kiyosuke.sqlitlin.db.core.adapter.EntityDeletionOrUpdateAdapter
 import com.kiyosuke.sqlitlin.db.core.adapter.EntityInsertionAdapter
 import com.kiyosuke.sqlitlin.db.core.adapter.SharedSQLiteStatement
@@ -12,14 +12,14 @@ import com.kiyosuke.sqlitlin.db.core.common.wrap
 import com.kiyosuke.sqlitlin.db.core.exception.EmptyResultSetException
 import com.kiyosuke.sqlitlin.db.table.Table
 
-abstract class Dao<T : Table>(private val database: SupportDatabase) {
+abstract class Dao<T : Table>(private val database: Sqlitlin) {
     abstract val table: T
 
     private val insertAdapter by lazy {
         object : EntityInsertionAdapter<ColumnMap>(database) {
             override fun createQuery(): String = table.insertSql
 
-            override fun bind(stmt: SQLiteStatement, entity: ColumnMap) {
+            override fun bind(stmt: SupportSQLiteStatement, entity: ColumnMap) {
                 table.columns.forEachIndexed { index, column ->
                     stmt.bind(index + 1, entity[column])
                 }
@@ -31,7 +31,7 @@ abstract class Dao<T : Table>(private val database: SupportDatabase) {
         object : EntityDeletionOrUpdateAdapter<ColumnMap>(database) {
             override fun createQuery(): String = table.updateSql
 
-            override fun bind(stmt: SQLiteStatement, entity: ColumnMap) {
+            override fun bind(stmt: SupportSQLiteStatement, entity: ColumnMap) {
                 var index = 0
                 table.columns.forEach { column ->
                     ++index
@@ -49,7 +49,7 @@ abstract class Dao<T : Table>(private val database: SupportDatabase) {
         object : EntityDeletionOrUpdateAdapter<ColumnMap>(database) {
             override fun createQuery(): String = table.deleteSql
 
-            override fun bind(stmt: SQLiteStatement, entity: ColumnMap) {
+            override fun bind(stmt: SupportSQLiteStatement, entity: ColumnMap) {
                 table.columns.filter(Column<*>::primaryKey).forEachIndexed { index, column ->
                     stmt.bind(index + 1, entity[column])
                 }

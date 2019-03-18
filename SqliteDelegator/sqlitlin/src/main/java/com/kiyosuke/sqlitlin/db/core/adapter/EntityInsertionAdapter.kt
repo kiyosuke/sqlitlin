@@ -1,15 +1,15 @@
 package com.kiyosuke.sqlitlin.db.core.adapter
 
-import android.database.sqlite.SQLiteStatement
-import com.kiyosuke.sqlitlin.db.core.SupportDatabase
+import com.kiyosuke.sqlitlin.db.core.Sqlitlin
+import com.kiyosuke.sqlitlin.db.core.support.SupportSQLiteStatement
 
 /**
  * インサート時に利用
  */
 @Suppress("unused")
-abstract class EntityInsertionAdapter<T>(database: SupportDatabase) : SharedSQLiteStatement(database) {
+abstract class EntityInsertionAdapter<T>(database: Sqlitlin) : SharedSQLiteStatement(database) {
 
-    protected abstract fun bind(stmt: SQLiteStatement, entity: T)
+    protected abstract fun bind(stmt: SupportSQLiteStatement, entity: T)
 
     fun insert(entity: T) {
         val stmt = acquire()

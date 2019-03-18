@@ -1,14 +1,14 @@
 package com.kiyosuke.sqlitlin.db.core.adapter
 
-import android.database.sqlite.SQLiteStatement
-import com.kiyosuke.sqlitlin.db.core.SupportDatabase
+import com.kiyosuke.sqlitlin.db.core.Sqlitlin
+import com.kiyosuke.sqlitlin.db.core.support.SupportSQLiteStatement
 
 /**
  * 全件削除または、全カラムに更新をかける際に利用
  */
-abstract class EntityDeletionOrUpdateAdapter<T>(database: SupportDatabase) : SharedSQLiteStatement(database) {
+abstract class EntityDeletionOrUpdateAdapter<T>(database: Sqlitlin) : SharedSQLiteStatement(database) {
 
-    protected abstract fun bind(stmt: SQLiteStatement, entity: T)
+    protected abstract fun bind(stmt: SupportSQLiteStatement, entity: T)
 
     fun handle(entity: T): Int {
         val stmt = acquire()

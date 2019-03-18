@@ -1,8 +1,8 @@
 package com.kiyosuke.sqlitlin.db.core.adapter
 
-import android.database.sqlite.SQLiteStatement
+import com.kiyosuke.sqlitlin.db.core.support.SupportSQLiteStatement
 
-fun SQLiteStatement.bind(index: Int, value: Any?) {
+fun SupportSQLiteStatement.bind(index: Int, value: Any?) {
     when (value) {
         null -> bindNull(index)
         is ByteArray -> bindBlob(index, value)
