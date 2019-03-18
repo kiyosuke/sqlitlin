@@ -7,25 +7,26 @@ AndroidのSQLite操作ライブラリ
 ## Initial
 最初にAppDatabaseクラスを作成します。
 ```
-class AppDatabase(context: Context, name: String, version: Int) : NormalDatabase(context, name, version) {
-    
-    override fun createTable(db: SQLiteDatabase) {
-        db.execSQL(Users.createSql)
-    }
-    
-    val usersDao by lazy { UsersDao(this) }
-}
-
 class App : Application() {
     
     override fun onCreate() {
         super.onCreate()
         
-        db = AppDatabase(applicationContext, "sqlitlin.db", 1)
+        db = Sqlitlin.builder(applicationContext, "sqlitlin.db", 1)
+            .addTables(Users)
+            .addMigration(MIGRATION_1_2)
+            .build()
     }
     
     companion object {
-        lateinit ver db: AppDatabase
+        lateinit ver db: Sqlitlin
+        
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migration(database: SupportSQLiteDatabase) {
+                Log.d(TAG, "running migration 1 to 2")
+                database.addColumn(Users.job)
+            }
+        }
     }
 }
 ```
@@ -50,17 +51,26 @@ data class User(
 
 ## データベースアクセス
 ```
-class UsersDao(database: SupportDatabase) : Dao<Users>(database) {
-    override val table: Users = Users
-    
-    fun getUser() = 
-        select {
+class UsersDao(private val dao: Dao<Users>) {
+
+    fun getUser() = withContext(Dispachers.IO) {
+        dao.select {
             where {
                 Users.age between (10 to 30)
             }
             orderBy(Users.age to OrderBy.SortOrder.ASC)
             limit(10)
-        }
+        }   
+    }
+    
+    fun insertUsers(users: List<ColumnMap>) = withContext(Dispatchers.IO) {
+        dao.insert(users)
+    }
+}
+
+object AppModule {
+    val usersDao: UsersDao
+        get() = App.db.createDao(Users)
 }
 ```
 
@@ -70,7 +80,7 @@ class UsersDao(database: SupportDatabase) : Dao<Users>(database) {
 class MainActivity : AppCompatActivity(), CoroutineScope {
     private lateinit var job: Job
     
-    private val usersDao by lazy { App.db.usersDao }
+    private val usersDao by lazy { AppModule.usersDao }
     
     override val coroutineContext: CoroutineContext get() = Dispatchers.Main + job
     
