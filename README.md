@@ -70,7 +70,7 @@ class UsersDao(private val dao: Dao<Users>) {
 
 object AppModule {
     val usersDao: UsersDao
-        get() = UsersDao(App.db)
+        get() = App.db.createDao(Users)
 }
 ```
 
