@@ -213,6 +213,10 @@ class Sqlitlin private constructor(
             this.migrations.addMigrations(*migrations)
         }
 
+        fun factory(factory: SupportSQLiteOpenHelper.Factory) = apply {
+            this.factory = factory
+        }
+
         fun build(): Sqlitlin {
             val factory = factory ?: NormalSQLiteOpenHelperFactory()
             return Sqlitlin(context, name, version, factory, tables, migrations, isMainThreadAssertion)
