@@ -6,4 +6,5 @@ object Users : Table() {
     val id = integer("id").primaryKey().autoIncrement()
     val name = text("name")
     val age = integer("age").nullable()
+    val job = text("job").nullable()
 }
