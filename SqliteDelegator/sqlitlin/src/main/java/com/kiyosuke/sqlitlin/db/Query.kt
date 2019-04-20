@@ -6,6 +6,7 @@ import com.kiyosuke.sqlitlin.db.table.Table
 
 abstract class Query<T : Table>(protected val columns: List<Column<*>>, protected val from: T) {
 
+    protected var distinct: Boolean = false
     protected var join: Join? = null
 
     protected var where: Where? = null
@@ -16,6 +17,10 @@ abstract class Query<T : Table>(protected val columns: List<Column<*>>, protecte
     protected var orderBy: OrderBy? = null
 
     protected var limit: Limit? = null
+
+    fun distinct() {
+        this.distinct = true
+    }
 
     infix fun where(whereOperation: WhereOperationBuilder.(T) -> Op) {
         val where = Where(whereOperation(WhereOperationBuilder, from))
@@ -55,6 +60,7 @@ class Select<T : Table>(columns: List<Column<*>>, from: T) : Query<T>(columns, f
 
     override fun toSql(): String = buildString {
         append("SELECT ")
+        if (distinct) append("DISTINCT ")
         append(columns.joinToString(",") { "${it.tableName}.${it.name} AS ${it.cursorKey}" })
         append(" FROM ${from.tableName}")
         join?.let {
@@ -182,4 +188,3 @@ data class OrderBy(val column: Column<*>, val sortOrder: SortOrder) {
 }
 
 data class Limit(val limit: Int, val offset: Int = 0)
-
