@@ -6,7 +6,7 @@ AndroidのSQLite操作ライブラリ
 
 ## Initial
 最初にAppDatabaseクラスを作成します。
-```
+```kotlin
 class App : Application() {
     
     override fun onCreate() {
@@ -32,7 +32,7 @@ class App : Application() {
 ```
 
 ## テーブル定義
-```
+```kotlin
 // usersテーブルを定義
 object Users : Table("users") {
     val id = integer("id").primaryKey().autoIncrement()
@@ -40,7 +40,7 @@ object Users : Table("users") {
     val age = integer("age").nullable()
 }
 ```
-```
+```kotlin
 data class User(
     val id: Int,
     val name: String,
@@ -50,7 +50,7 @@ data class User(
 
 
 ## データベースアクセス
-```
+```kotlin
 class UsersDao(private val dao: Dao<Users>) {
 
     fun getUser() = withContext(Dispachers.IO) {
@@ -70,13 +70,13 @@ class UsersDao(private val dao: Dao<Users>) {
 
 object AppModule {
     val usersDao: UsersDao
-        get() = App.db.createDao(Users)
+        get() = UsersDao(App.db.createDao(Users))
 }
 ```
 
 
 ## 利用側
-```
+```kotlin
 class MainActivity : AppCompatActivity(), CoroutineScope {
     private lateinit var job: Job
     
